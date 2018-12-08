@@ -150,6 +150,20 @@ class AsyncExecutor(object):
                                      data_feed.desc(), filelist, thread_num,
                                      fetch_var_names, debug)
 
+    def run_worker(self):
+        
+
+    def download_data(afs_path, local_path, process_num=12):
+        client = hdfs.HDFSClient(hadoop_home, configs)
+        downloads = hdfs.multi_download(
+            client,
+            afs_path,
+            local_path,
+            self.instance._rankid,
+            self.instance.get_node_cnt(),
+            multi_processes=process_num)
+        self.instance.barrier_all()
+
     def config_distributed_nodes(self, dist_opt):
         # get total rank
         # get rank index
@@ -157,21 +171,36 @@ class AsyncExecutor(object):
         # get hadoop info
         return
 
+    def get_node_info(self, dist_desc):
+        import .distributed.ps_instance import ps_instance
+        # what's "init_param"
+        self.instance = ps_instance.PaddlePSInstance("init_param", 1, 2)
+        return self.instance
 
-    def init_server(self, filename, index):
-        self.executor.init_server(filename, index)
+    def init_server(self, dist_desc):
+        self.executor.init_server(dist_desc, self.instance._rankid)
 
     def init_worker(self, filename, ips, nodes_cnt, index):
         self.executor.init_worker(filename, ips, nodes_cnt, index)
-       
+
     def start_server(self):
-        return self.executor.start_server()
+        ip = self.executor.start_server()
+        self.instance.set_ip(ip)
+        self.instance.barrier_all()
+        ips = instance.gather_ips()
+        self.executor.gather_servers(
+            ips, self.instance.get_node_cnt())
+        self.instance.barrier_all()
     
     def gather_servers(self, ips, nodes_cnt):
         self.executor.gather_servers(ips, nodes_cnt)
 
-    def init_model(self):
+    def init_model(self, startup_program):
+        place = fluid.CPUPlace()
+        executor = fluid.Executor(place)
+        executor.run(startup_program)
         self.executor.init_model()
+        self.instance.barrier_all()
 
     def save_model(self, save_path):
         self.executor.save_model(save_path)
