@@ -1,0 +1,5 @@
+if(WITH_PSLIB)
+    cc_library(fleet_wrapper SRCS fleet_wrapper.cc DEPS pslib_brpc pslib)
+else()
+    cc_library(fleet_wrapper SRCS fleet_wrapper.cc)
+endif(WITH_PSLIB)

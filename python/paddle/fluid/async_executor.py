@@ -24,6 +24,7 @@ from paddle.fluid.proto import data_feed_pb2
 from google.protobuf import text_format
 from . import io
 from .data_feed_desc import DataFeedDesc
+from .trainer_desc import TrainerDesc, MultiTrainer, DistMultiTrainer
 from .distributed import ps_instance
 from .contrib.utils import hdfs_utils as hdfs
 
@@ -89,6 +90,40 @@ class AsyncExecutor(object):
         self.executor = core.AsyncExecutor(scope, p)
         self.instance = None
 
+    def run(self, program, data_feed, filelist, thread_num, fetch, debug=False):
+        if program is None:
+            program = default_main_program()
+        program_desc = program.desc
+
+        if data_feed is None:
+            raise ValueError('ValueError: data_feed should be provided')
+
+        if filelist is None:
+            raise ValueError('ValueError: filelist should be provided')
+
+        if isinstance(filelist, str):
+            filelist = [filelist]
+
+        if not isinstance(thread_num, int):
+            raise TypeError('TypeError: thread_num should be a positive number')
+
+        is_local = self.instance == None
+        trainer = None
+        if is_local:
+            trainer = MultiTrainer()
+        else:
+            trainer = DistMultiTrainer()
+        trainer.gen_trainer_desc(
+            dataset=data_feed, fleet_desc=self.dist_desc, worker="downpour")
+        trainer.set_thread(thread_num)
+        trainer.set_filelist(filelist)
+        trainer.set_data_feed(data_feed)
+        with open("trainer_desc.proto", "w") as fout:
+            fout.write(trainer._desc())
+        # define a trainer and a device_worker here
+        self.executor.run_from_files(program_desc, trainer._desc(), debug)
+
+    '''
     def run(self,
             program,
             data_feed,
@@ -160,6 +195,7 @@ class AsyncExecutor(object):
         self.executor.run_from_files(program_desc,
                                      data_feed.desc(), filelist, thread_num,
                                      fetch_var_names, mode, debug)
+    '''
 
     def download_data(self,
                       afs_path,
@@ -250,7 +286,9 @@ class AsyncExecutor(object):
             raise ValueError(
                 'instance is None, please run config_distributed_nodes init instance'
             )
-        self.executor.init_server(dist_desc, self.instance._rankid)
+        self.dist_desc_str = text_format.MessageToString(dist_desc)
+        self.dist_desc = dist_desc
+        self.executor.init_server(self.dist_desc_str, self.instance._rankid)
         ip = self.executor.start_server()
         self.instance.set_ip(ip)
         self.instance.barrier_all()  #wait all server start
@@ -270,13 +308,16 @@ class AsyncExecutor(object):
             raise ValueError(
                 'instance is None, please run config_distributed_nodes init instance'
             )
+
+        self.dist_desc_str = text_format.MessageToString(dist_desc)
+        self.dist_desc = dist_desc
         place = core.CPUPlace()
         executor = Executor(place)
         executor.run(startup_program)
 
         self.instance.barrier_all()  #wait all server start
         ips = self.instance.gather_ips()
-        self.executor.init_worker(dist_desc, ips,
+        self.executor.init_worker(self.dist_desc_str, ips,
                                   self.instance.get_node_cnt(),
                                   self.instance._rankid)
         self.instance.barrier_all()  #wait all worker start
