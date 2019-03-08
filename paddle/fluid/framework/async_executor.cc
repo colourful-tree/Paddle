@@ -97,5 +97,6 @@ void AsyncExecutor::RunFromDataset(const ProgramDesc& main_program,
                                    Dataset* data_set,
                                    const std::string& trainer_desc_str,
                                    const bool debug) {}
+
 }  // einit_modelnd namespace framework
 }  // end namespace paddle

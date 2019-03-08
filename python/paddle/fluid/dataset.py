@@ -23,9 +23,10 @@ class DatasetFactory(object):
         pass
 
     def create_dataset(self, datafeed_class):
-        datafeed_class = datafeed_class.capitalize()
+        #datafeed_class = datafeed_class.capitalize()
         try:
             dataset = globals()[datafeed_class]()
+            return dataset
         except:
             raise ValueError("datafeed class %s does not exist" %
                              datafeed_class)
@@ -37,6 +38,7 @@ class DatasetBase(object):
         # to decide whether we need create in memory instance
         self.proto_desc = data_feed_pb2.DataFeedDesc()
         self.proto_desc.pipe_command = "cat"
+        self.dataset = core.Dataset()
 
     def set_pipe_command(self, pipe_command):
         """
@@ -59,6 +61,12 @@ class DatasetBase(object):
 
         """
         self.proto_desc.batch_size = batch_size
+
+    def set_thread(self, thread_num):
+        self.dataset.SetThreadNum(thread_num)
+
+    def set_filelist(self, filelist):
+        self.dataset.SetFileList(filelist)
 
     def set_use_var(self, var_list):
         multi_slot = self.proto_desc.multi_slot_desc()
@@ -93,17 +101,24 @@ class DatasetBase(object):
 
 class InMemoryDataset(DatasetBase):
     def __init__(self):
-        super(InMemoryDataset.__init__())
-        self.proto_desc.name = "InMemoryDataFeed"
+        super(InMemoryDataset, self).__init__()
+        self.proto_desc.name = "MultiSlotInMemoryDataFeed"
+
+    def load_into_memory(self):
+        self.dataset.SetDataFeedDesc(self.proto_desc)
+        self.dataset.LoadIntoMemory()
 
     def local_shuffle(self):
-        pass
+        self.dataset.LocalShuffle()
 
     def global_shuffle(self):
-        pass
+        from .distributed import ps_instance
+        instance = ps_instance.PaddlePSInstance(1, 2)
+        self.dataset.SetTrainerNum(instance.get_worker_num())
+        self.GlobalShuffle()
 
 
 class QueueDataset(DatasetBase):
     def __init__(self):
-        super(QueueDataset.__init__())
+        super(QueueDataset, self).__init__()
         self.proto_desc.name = "MultiSlotDataFeed"

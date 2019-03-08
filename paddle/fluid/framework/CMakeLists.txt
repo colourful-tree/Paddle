@@ -171,8 +171,7 @@ else()
 endif()
 
 if(WITH_DISTRIBUTE)
-  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope
-framework_proto glog fleet_wrapper
+  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope framework_proto glog fleet_wrapper
     lod_rank_table feed_fetch_method sendrecvop_rpc  ${GLOB_DISTRIBUTE_DEPS} graph_to_program_pass variable_helper ${NGRAPH_EXE_DEPS})
   set(DISTRIBUTE_COMPILE_FLAGS "-Wno-non-virtual-dtor -Wno-error=non-virtual-dtor -Wno-error=delete-non-virtual-dtor")
   set_source_files_properties(executor.cc PROPERTIES COMPILE_FLAGS ${DISTRIBUTE_COMPILE_FLAGS})
