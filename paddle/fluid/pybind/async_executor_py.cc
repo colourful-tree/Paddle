@@ -49,13 +49,14 @@ void BindAsyncExecutor(py::module* m) {
             new framework::AsyncExecutor(scope, place));
       }))
       .def("run_from_files", &framework::AsyncExecutor::RunFromFile)
+      .def("run_from_dataset", &framework::AsyncExecutor::RunFromDataset)
       .def("init_server", &framework::AsyncExecutor::InitServer)
       .def("init_worker", &framework::AsyncExecutor::InitWorker)
       .def("start_server", &framework::AsyncExecutor::StartServer)
       .def("stop_server", &framework::AsyncExecutor::StopServer)
-      .def("gather_servers", &framework::AsyncExecutor::GatherServers)
-      .def("init_model", &framework::AsyncExecutor::InitModel)
-      .def("save_model", &framework::AsyncExecutor::SaveModel);
+      .def("gather_servers", &framework::AsyncExecutor::GatherServers);
+  // .def("init_model", &framework::AsyncExecutor::InitModel)
+  // .def("save_model", &framework::AsyncExecutor::SaveModel);
 }  // end BindAsyncExecutor
 #else
 void BindAsyncExecutor(py::module* m) {
