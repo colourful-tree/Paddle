@@ -115,6 +115,18 @@ class PaddlePSInstance(object):
         self._ips = self.dh.comm.allgather(self._ip)
         return self._ips
 
+    def get_worker_num(self):
+        """
+        Return worker num
+        """
+        return self._worker_num
+
+    def get_server_num(self):
+        """
+        Return server num
+        """
+        return self._server_num
+
     def get_node_cnt(self):
         """
         Return node cnt

@@ -135,9 +135,8 @@ int PrivateQueueDataFeed<T>::Next() {
   return batch_size_;
 }
 
-#ifdef _WIN32
+// explicit instantiation
 template class PrivateQueueDataFeed<std::vector<MultiSlotType>>;
-#endif
 
 template <typename T>
 InMemoryDataFeed<T>::InMemoryDataFeed() {
@@ -221,6 +220,9 @@ template <typename T>
 void InMemoryDataFeed<T>::LocalShuffle() {
   std::random_shuffle(memory_data_.begin(), memory_data_.end());
 }
+
+// explicit instantiation
+template class InMemoryDataFeed<std::vector<MultiSlotType>>;
 
 // todo global shuffle
 /*

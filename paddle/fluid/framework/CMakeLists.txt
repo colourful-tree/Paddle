@@ -171,12 +171,12 @@ else()
 endif()
 
 if(WITH_DISTRIBUTE)
-  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope framework_proto glog
+  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope framework_proto glog fleet_wrapper
     lod_rank_table feed_fetch_method sendrecvop_rpc  ${GLOB_DISTRIBUTE_DEPS} graph_to_program_pass variable_helper ${NGRAPH_EXE_DEPS})
   set(DISTRIBUTE_COMPILE_FLAGS "-Wno-non-virtual-dtor -Wno-error=non-virtual-dtor -Wno-error=delete-non-virtual-dtor")
   set_source_files_properties(executor.cc PROPERTIES COMPILE_FLAGS ${DISTRIBUTE_COMPILE_FLAGS})
 else()
-  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope framework_proto glog lod_rank_table feed_fetch_method graph_to_program_pass variable_helper ${NGRAPH_EXE_DEPS})
+  cc_library(executor SRCS executor.cc DEPS op_registry device_context scope framework_proto glog lod_rank_table feed_fetch_method graph_to_program_pass variable_helper fleet_wrapper ${NGRAPH_EXE_DEPS})
   cc_test(test_naive_executor SRCS naive_executor_test.cc DEPS naive_executor elementwise_add_op)
 endif()
 
@@ -196,7 +196,7 @@ if(WITH_PSLIB)
 			      DEPS op_registry device_context scope framework_proto
 			      trainer_desc_proto glog lod_rank_table fleet_wrapper lodtensor_printer
 			      feed_fetch_method graph_to_program_pass async_executor_proto
-			      variable_helper pslib_brpc pslib timer)
+			      variable_helper pslib_brpc pslib timer fs shell)
 else()
     cc_library(async_executor SRCS async_executor.cc data_feed.cc data_feed_factory.cc
                               executor_thread_worker.cc multi_trainer.cc dist_multi_trainer.cc
@@ -206,7 +206,7 @@ else()
 			      DEPS op_registry device_context scope framework_proto
 			      trainer_desc_proto glog lod_rank_table fleet_wrapper lodtensor_printer
 			      feed_fetch_method graph_to_program_pass async_executor_proto
-			      variable_helper timer)
+			      variable_helper timer fs shell)
 endif(WITH_PSLIB)
 
 

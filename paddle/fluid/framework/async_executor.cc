@@ -99,7 +99,6 @@ void AsyncExecutor::RunFromDataset(const ProgramDesc& main_program,
                                    const bool debug) {
 
 }
-                                                                  
 
 }  // einit_modelnd namespace framework
 }  // end namespace paddle

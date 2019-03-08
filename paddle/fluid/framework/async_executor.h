@@ -74,8 +74,9 @@ class AsyncExecutor {
   uint64_t StartServer();
   void StopServer();
   void GatherServers(const std::vector<uint64_t>& host_sign_list, int node_num);
-  void InitModel();
-  void SaveModel(const std::string& path);
+  // todo implement these
+  void InitModel() {}
+  void SaveModel(const std::string& path) {}
 
  public:
   std::shared_ptr<paddle::framework::FleetWrapper> fleet_ptr_;
